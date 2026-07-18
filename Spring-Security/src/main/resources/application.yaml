@@ -1,15 +1,64 @@
 spring:
   application:
     name: Spring-Security
+
+  # --- Database connection settings ---
   datasource:
     url: jdbc:mysql://localhost:3306/spring_security
     username: root
     password: 12345
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
+
+  security:
+    oauth2:
+      client:
+        # --- Registration: your app's identity as a "client" of Google ---
+        # This section tells Spring WHO your app is when talking to Google.
+        registration:
+          google:
+            client-id: YOUR_ACTUAL_CLIENT_ID        # from Google Cloud Console
+            client-secret: YOUR_ACTUAL_CLIENT_SECRET # from Google Cloud Console, keep this secret!
+
+            # The OAuth2 flow type — "authorization_code" is the standard,
+            # most secure flow for server-side web apps like this one.
+            authorization-grant-type: authorization_code
+
+            # What data you're asking Google's permission to access.
+            # "profile" = basic info (name, picture), "email" = user's email address.
+            scope:
+              - profile
+              - email
+
+        # --- Provider: Google's own OAuth2/OIDC server endpoints ---
+        # This section tells Spring WHERE to send requests on Google's side.
+        # (Optional for Google specifically — Spring Boot auto-fills these
+        # because "google" is a recognized built-in provider — but shown
+        # explicitly here so every step of the flow is visible.)
+        provider:
+          google:
+            # Step 1: where the user is redirected to log in + approve access
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+
+            # Step 2: backend-to-backend exchange of auth code -> access token
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+
+            # Step 3: fetch the logged-in user's profile info using the access token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+            # Which field in the user-info response uniquely identifies the user.
+            # "sub" (subject) is Google's stable, permanent user ID —
+            # safer to use than "email", since emails can change.
+            user-name-attribute: sub
+
 server:
   port: 8085
+
+# --- Logging ---
+# DEBUG level for Spring Security shows the full filter chain execution,
+# useful for tracing exactly why a request is allowed/denied.
 logging:
   level:
     org.springframework.security: DEBUG
