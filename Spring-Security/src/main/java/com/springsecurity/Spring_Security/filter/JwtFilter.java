@@ -1,6 +1,8 @@
 package com.springsecurity.Spring_Security.filter;
 
 
+import com.springsecurity.Spring_Security.enums.Permission;
+import com.springsecurity.Spring_Security.enums.Role;
 import com.springsecurity.Spring_Security.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -9,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
@@ -16,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -31,10 +35,18 @@ public class JwtFilter extends OncePerRequestFilter {
             token = authHeader.substring(7);
         }
 
-        if(SecurityContextHolder.getContext().getAuthentication() != null){
+        if(token != null && SecurityContextHolder.getContext().getAuthentication() == null){
             Claims claims = jwtService.verifySignatureAndExtractClaims(token);
+
+            Role role = Role.valueOf("ROLE_"+claims.get("ROLE", String.class));
+
+            List<SimpleGrantedAuthority> simpleGrantedAuthorities = new ArrayList<>();
+            role.getPermissions().forEach(permission->{
+                simpleGrantedAuthorities.add(new SimpleGrantedAuthority(permission.name()));
+            });
+            
             if(!jwtService.isTokenExpired(token)){
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(),null,new ArrayList<>());
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(),null,simpleGrantedAuthorities);
 
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }

@@ -3,6 +3,7 @@ package com.springsecurity.Spring_Security.controller;
 
 import com.springsecurity.Spring_Security.dto.AuthRequest;
 import com.springsecurity.Spring_Security.entity.UserEntity;
+import com.springsecurity.Spring_Security.enums.Role;
 import com.springsecurity.Spring_Security.repository.UserRepository;
 import com.springsecurity.Spring_Security.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,8 @@ public class UserController {
 
     @PostMapping("/encoderPassword")
     public void saveUserWithEncoder(@RequestParam String username,
-                                    @RequestParam String password){
+                                    @RequestParam String password,
+                                    @RequestParam Role role){
 
         System.out.println("HI");
 
@@ -40,6 +42,7 @@ public class UserController {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setIsActive(true);
+        user.setRole(role);
 
         userRepository.save(user);
     }
@@ -51,7 +54,13 @@ public class UserController {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
 
         if(authentication.isAuthenticated()){
-            return jwtService.genreateToken(authRequest.getUsername());
+
+            String role = authentication.getAuthorities()
+                        .iterator()
+                        .next()
+                        .getAuthority()
+                        .replace("ROLE_","");
+            return jwtService.genreateToken(authRequest.getUsername(), role);
         }
 
         return null;

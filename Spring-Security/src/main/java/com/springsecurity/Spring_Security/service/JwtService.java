@@ -17,13 +17,15 @@ public class JwtService {
     public static final String SECRET_KEY = "Mynameissaurabhkumarojhafromvaranasi";
 
 
-    public String genreateToken(String username){
+    public String genreateToken(String username, String role){
 
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("ROLE", role);
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 3600*1000))
-                .addClaims(new HashMap<>())
+                .addClaims(claims)
                 .signWith(getSignedKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
