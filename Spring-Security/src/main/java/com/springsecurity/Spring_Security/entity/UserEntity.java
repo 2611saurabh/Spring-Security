@@ -6,8 +6,6 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "Users")
-@NoArgsConstructor
-@AllArgsConstructor
 public class UserEntity {
 
     @Id
@@ -22,6 +20,19 @@ public class UserEntity {
 
     @Column(name = "is_active")
     private Boolean isActive;   // ✅ lowercase i
+
+
+    public UserEntity(Integer id, String username, String password, Boolean isActive) {
+
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.isActive = isActive;
+    }
+
+
+    public UserEntity() {
+    }
 
     public Integer getId() {
         return id;
